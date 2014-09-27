@@ -36,6 +36,40 @@ parser.add_argument('-o', dest='output', type=str, nargs='?',
                 required=True, help='output file name', default=None)
 
 
+def print_protein_lines(output, none_pattern, values, subfam=False):
+    """
+    print family lines based on the case
+    """
+    
+    if subfam == False:
+        for v in values:
+            line = "\t\t\t\t"
+            if (none_pattern.match(v[1]) != None or v[1] == ""):
+                continue
+            line += (str(v[1]).strip() + "\t")
+            if (none_pattern.match(v[0]) == None and v[0] != ""):
+                line += ( " " + str(v[0]).strip() )
+            if (none_pattern.match(v[3]) == None and v[3] != ""):
+                line += ( " (" + str(v[3]).strip() + ")" )
+            if (none_pattern.match(v[2]) == None and v[2] != ""):
+                line += ( " [" + str(v[2]).strip() + "]" )
+            # write out line
+            output.write( line + "\n" )
+    else:
+        for v in values:
+            line = "\t\t\t\t"
+            if (none_pattern.match(v[1]) != None or v[1] == ""):
+                continue
+            line += (str(v[1]).strip() + "\t")
+            if (none_pattern.match(v[0]) == None and v[0] != ""):
+                line += ( " " + str(v[0]).strip() )
+            if (none_pattern.match(v[3]) == None and v[3] != ""):
+                line += ( " (" + str(v[3]).strip() + ")" )
+            if (none_pattern.match(v[2]) == None and v[2] != ""):
+                line += ( " [" + str(v[2]).strip() + "]" )
+            # write out line
+            output.write( line + "\n" )
+
 def main():
     args = vars(parser.parse_args())
     
@@ -70,19 +104,19 @@ def main():
         fam_num = temp_fam_num
         for num in fam_num:
             output.write( "\t" + (f + str(num)) + "\n" )
-            
             # check for subfamilies 
             sql = "SELECT DISTINCT(subf) FROM CAZY_2014_09_04 WHERE fam='" + str(f) + "'" + " AND " + "num='" + str(num) + "'"
             c.execute(sql)
             subfs = c.fetchall()
             
             if len(subfs) <= 1:
+                output.write( "\t\t" + (f + str(num)) + "\n" )
                 # family had no subfamilies
                 sql = "SELECT DISTINCT(super) FROM CAZY_2014_09_04 WHERE fam='" + str(f) + "'" + " AND " + "num='" + str(num) + "'"
                 c.execute(sql)
                 super_class = c.fetchall()
                 for super_c in super_class:
-                    output.write( "\t" + "\t" + str(super_c[0]) + "\n" )
+                    output.write( "\t\t\t" + str(super_c[0]) + "\n" )
                     sql = "SELECT protein, genbank, org, ec, uniprot, subf FROM CAZY_2014_09_04 WHERE fam='" +\
                                                                         str(f) + "' AND " +\
                                                                         "num='" + str(num) + "' AND " +\
@@ -90,19 +124,19 @@ def main():
                                                                         "NOT (genbank LIKE '% %' OR genbank LIKE '%None%')"
                     c.execute(sql)
                     values = c.fetchall()
-                    for v in values:
-                        line = "\t\t\t"
-                        if (none_pattern.match(v[1]) != None or v[1] == ""):
-                            continue
-                        line += (str(v[1]).strip() + "\t")
-                        if (none_pattern.match(v[0]) == None and v[0] != ""):
-                            line += ( " " + str(v[0]).strip() )
-                        if (none_pattern.match(v[3]) == None and v[3] != ""):
-                            line += ( " (" + str(v[3]).strip() + ")" )
-                        if (none_pattern.match(v[2]) == None and v[2] != ""):
-                            line += ( " [" + str(v[2]).strip() + "]" )
-                        # write out line
-                        output.write( line + "\n" )
+                    print_protein_lines(output, none_pattern, values, subfam=False)
+                        # line = "\t\t\t"
+                        # if (none_pattern.match(v[1]) != None or v[1] == ""):
+                        #     continue
+                        # line += (str(v[1]).strip() + "\t")
+                        # if (none_pattern.match(v[0]) == None and v[0] != ""):
+                        #     line += ( " " + str(v[0]).strip() )
+                        # if (none_pattern.match(v[3]) == None and v[3] != ""):
+                        #     line += ( " (" + str(v[3]).strip() + ")" )
+                        # if (none_pattern.match(v[2]) == None and v[2] != ""):
+                        #     line += ( " [" + str(v[2]).strip() + "]" )
+                        # # write out line
+                        # output.write( line + "\n" )
             else:
                 # iterate through subfamilies
                 
@@ -121,7 +155,7 @@ def main():
                 subfs_temp.sort()
                 subfs = subfs_temp
                 
-                print subfs
+                # print subfs
                 
                 for subf in subfs:
                     if subf != "None":
@@ -142,19 +176,19 @@ def main():
                                                                             "subf='" + str(subf) + "'"
                         c.execute(sql)
                         values = c.fetchall()
-                        for v in values:
-                            line = "\t\t\t\t"
-                            if (none_pattern.match(v[1]) != None or v[1] == ""):
-                                continue
-                            line += (str(v[1]).strip() + "\t")
-                            if (none_pattern.match(v[0]) == None and v[0] != ""):
-                                line += ( " " + str(v[0]).strip() )
-                            if (none_pattern.match(v[3]) == None and v[3] != ""):
-                                line += ( " (" + str(v[3]).strip() + ")" )
-                            if (none_pattern.match(v[2]) == None and v[2] != ""):
-                                line += ( " [" + str(v[2]).strip() + "]" )
-                            # write out line
-                            output.write( line + "\n" )
+                        print_protein_lines(output, none_pattern, values, subfam=True)
+                            # line = "\t\t\t\t"
+                            # if (none_pattern.match(v[1]) != None or v[1] == ""):
+                            #     continue
+                            # line += (str(v[1]).strip() + "\t")
+                            # if (none_pattern.match(v[0]) == None and v[0] != ""):
+                            #     line += ( " " + str(v[0]).strip() )
+                            # if (none_pattern.match(v[3]) == None and v[3] != ""):
+                            #     line += ( " (" + str(v[3]).strip() + ")" )
+                            # if (none_pattern.match(v[2]) == None and v[2] != ""):
+                            #     line += ( " [" + str(v[2]).strip() + "]" )
+                            # # write out line
+                            # output.write( line + "\n" )
     output.close()
     
 # call the main function
